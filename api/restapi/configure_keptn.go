@@ -20,6 +20,7 @@ import (
 
 	"github.com/keptn/keptn/api/handlers"
 	"github.com/keptn/keptn/api/importer"
+	"github.com/keptn/keptn/api/importer/execute"
 	"github.com/keptn/keptn/api/importer/model"
 	custommiddleware "github.com/keptn/keptn/api/middleware"
 	"github.com/keptn/keptn/api/models"
@@ -104,8 +105,7 @@ func configureAPI(api *operations.KeptnAPI) http.Handler {
 
 	// Import endpoint
 	importProcessor := importer.NewImportPackageProcessor(
-		new(model.YAMLManifestUnMarshaler), nil, /*new(importer.KeptnAPIExecutor)*/
-		// TODO review after implementing executor
+		new(model.YAMLManifestUnMarshaler), execute.NewKeptnExecutor(execute.StaticKeptnEndpointProvider{}),
 	)
 
 	api.ImportOperationsImportHandler = import_operations.ImportHandlerFunc(
