@@ -13,15 +13,19 @@ import (
 	"github.com/keptn/keptn/api/importer/model"
 )
 
+//go:generate moq -pkg fake --skip-ensure -out ./fake/default_api_mock.go . requestFactory:MockRequestFactory
+
 var /*const*/ ErrTaskFailed = errors.New("task failed")
 
-type otelWrappedHttpClient struct{}
+type otelWrappedHttpClient struct {
+	client http.Client
+}
 
 func (o *otelWrappedHttpClient) Do(r *http.Request) (*http.Response, error) {
-	client := http.Client{
-		Transport: otelhttp.NewTransport(nil),
+	if _, isOtelTransport := o.client.Transport.(*otelhttp.Transport); !isOtelTransport {
+		o.client.Transport = otelhttp.NewTransport(o.client.Transport)
 	}
-	return client.Do(r)
+	return o.client.Do(r)
 }
 
 type requestFactory interface {
