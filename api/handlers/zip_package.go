@@ -21,8 +21,13 @@ type ZippedPackage struct {
 }
 
 func (m *ZippedPackage) GetResource(resourceName string) (io.ReadCloser, error) {
-	// TODO implement me
-	panic("implement me")
+	actualPath := path.Join(m.extractedDir, resourceName)
+	file, err := os.Open(actualPath)
+	if err != nil {
+		return nil, fmt.Errorf("error accessing resource %s: %w", resourceName, err)
+	}
+
+	return file, nil
 }
 
 // Close signals that the package resources can be freed (including any extracted files).
