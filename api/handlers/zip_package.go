@@ -15,13 +15,20 @@ import (
 // ErrorUncompressedSizeTooBig signals that a zip archive has an uncompressed size greater than maximum size allowed
 var /*const*/ ErrorUncompressedSizeTooBig = errors.New("uncompressed size of package exceeds configured maximum size")
 
+// ErrorInvalidResourcePath is returned whenever the requested resource location would not be within the ZippedPackage
+// content
+var /*const*/ ErrorInvalidResourcePath = errors.New("invalid resource path")
+
 // ZippedPackage represents a zipped import package ready to be use (it is extracted to a temp directory)
 type ZippedPackage struct {
 	extractedDir string
 }
 
 func (m *ZippedPackage) GetResource(resourceName string) (io.ReadCloser, error) {
-	actualPath := path.Join(m.extractedDir, resourceName)
+	actualPath := path.Clean(path.Join(m.extractedDir, resourceName))
+	if !strings.HasPrefix(actualPath, m.extractedDir) {
+		return nil, ErrorInvalidResourcePath
+	}
 	file, err := os.Open(actualPath)
 	if err != nil {
 		return nil, fmt.Errorf("error accessing resource %s: %w", resourceName, err)

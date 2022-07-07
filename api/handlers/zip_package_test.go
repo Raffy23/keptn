@@ -77,6 +77,7 @@ func TestZippedPackage_GetResource(t *testing.T) {
 		want          []byte
 		wantErr       bool
 		errorContains string
+		expectedErr   error
 	}{
 		{
 			name:         "Happy path - access existing resource",
@@ -94,6 +95,13 @@ func TestZippedPackage_GetResource(t *testing.T) {
 			wantErr:       true,
 			errorContains: "error accessing resource fantasydir/imaginaryfile.json",
 		},
+		{
+			name:         "Error - try to escape from zipped package confines",
+			resourceName: "../../somefile.json",
+			want:         nil,
+			wantErr:      true,
+			expectedErr:  ErrorInvalidResourcePath,
+		},
 	}
 
 	for _, tt := range tests {
@@ -105,6 +113,9 @@ func TestZippedPackage_GetResource(t *testing.T) {
 					assert.Nil(t, resource)
 					if tt.errorContains != "" {
 						assert.ErrorContains(t, err, tt.errorContains)
+					}
+					if tt.expectedErr != nil {
+						assert.ErrorIs(t, err, tt.expectedErr)
 					}
 				} else {
 					require.NoError(t, err)
