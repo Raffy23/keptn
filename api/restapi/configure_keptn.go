@@ -35,8 +35,6 @@ import (
 
 const envVarLogLevel = "LOG_LEVEL"
 
-const controlPlaneServiceEnvVar = "CONTROLPLANE_URI"
-
 type EnvConfig struct {
 	HideDeprecated            bool    `envconfig:"HIDE_DEPRECATED" default:"false"`
 	ImportBasePath            string  `envconfig:"IMPORT_BASE_PATH"`
@@ -104,14 +102,16 @@ func configureAPI(api *operations.KeptnAPI) http.Handler {
 	// api.EvaluationTriggerEvaluationHandler = evaluation.TriggerEvaluationHandlerFunc(handlers.TriggerEvaluationHandlerFunc)
 
 	// Import endpoint
+	keptnEndpointProvider := execute.KeptnEndpointProviderFromEnv()
+
 	importProcessor := importer.NewImportPackageProcessor(
-		new(model.YAMLManifestUnMarshaler), execute.NewKeptnExecutor(execute.StaticKeptnEndpointProvider{}),
+		new(model.YAMLManifestUnMarshaler), execute.NewKeptnExecutor(keptnEndpointProvider),
 	)
 
 	api.ImportOperationsImportHandler = import_operations.ImportHandlerFunc(
 		handlers.GetImportHandlerFunc(
 			env.ImportBasePath,
-			handlers.NewControlPlaneProjectChecker(os.Getenv(controlPlaneServiceEnvVar)),
+			handlers.NewControlPlaneProjectChecker(keptnEndpointProvider),
 			env.MaxImportUncompressedSize,
 			importProcessor,
 		),
